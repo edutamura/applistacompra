@@ -39,7 +39,7 @@ if (mysqli_num_rows($resultado) > 0){
 
 if(isset($_POST['_voltar']) == 'Voltar'){
     mysqli_close($conexao);
-    header('Location: /lista.php');
+    header('Location: /index.php');
 } else if(isset($_POST['_item']) <> 0){
     $item = $_POST['_item'];
     foreach($item as $i) {

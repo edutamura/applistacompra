@@ -48,7 +48,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
         case isset($_POST['_voltar']):
             //fecha a conexão com o Banco de Dados
             mysqli_close($conexao);
-            header('Location: /lista.php');
+            header('Location: /index.php');
     }  
 }
 ?>
