@@ -17,15 +17,17 @@
 //session_start();
 
 //verifica se a sessão foi iniciada, ou seja, se o usuário fez o login corretamente antes de acessar o sistema
-include('login/verificaSessao.php');
+require_once(dirname(__FILE__).'/login/verificaSessao.php');
 
 //adicionar conexão com o banco de dados
-include('banco/conexao.php');
+require_once(dirname(__FILE__).'/banco/conexao.php');
 
-include('item/removerItemSimples.php');
+//require_once('item/removerItemSimples.php');
+
+require_once(dirname(__FILE__).'/item/controleItem.php');
 
 //monta a query a ser executada no Banco de Dados e preenche o resultado na variável
-$query = "select idItem, descricao, quantidade from item";
+$query = "select idItem, descricao, status, quantidade from item";
 $resultado = mysqli_query($conexao, $query);
 
 //Abre divs para centralizar o resultado da lista
@@ -33,7 +35,6 @@ echo '<html><div class="container">';
 echo '<div class="row justify-content-center">';
 
 //echo '<div class="row"><strong>Lista:</strong><br></div>';
-
 
 //imprime todas as linhas da tabela
 
@@ -49,14 +50,62 @@ echo '<thead>
 echo '<tbody>';
 if (mysqli_num_rows($resultado) > 0){
     while($row = mysqli_fetch_assoc($resultado)){
-        echo '<tr>';
-        echo '<td>' . $row["descricao"] . '</td>';
-        echo '<td align="left">' . $row["quantidade"] . '</td>';
-        echo '<td> '. '<input type="checkbox">' . ' </td>';
-        echo '<td><form method="POST" action="home.php">';
-        echo '<button type="submit" class="btn-primary" value="$row["idItem"]" name="_alterarItem">Alterar</button>' . '  ' . 
-        '<button type="submit" class="btn-danger" value="' . $row["idItem"] . ' " name="_removerItemSimples">Remover</button>';
-        echo '</form></td>';
+        if($row['status'] == 1){
+            echo '<tr style="background-color:lightgrey;">';
+        }
+        else{
+            echo '<tr>';
+        }
+        
+        //alterar
+        if($auxAlterarItem == true && $row['idItem'] == $idItemAlterar){
+            echo '<form method="POST" action="/item/controleItem.php">';
+            echo '<td><input type="text" name="_nomeItem" value="' . $row['descricao'] . '"> </td>';
+            echo '<td><input type="text" name="_quantidadeItem" value="' . $row['quantidade'] . '"> </td>';
+            if($row['status'] == '1'){
+                echo '<td><input value="Devolver" type="submit" name="_checkItemNull"></td>';
+                //echo '<input type="image" src="/CSS/img/selecaoS3.jpg" value="homer2" name="_checkItem">';
+            }
+            else{
+                echo '<td><input type="image" src="/CSS/img/selecaoN3.jpg" name="_checkItem"></td>';
+            }
+            //echo '<td> '. '<input type="checkbox">' . ' </td>';
+            echo '<td>';
+            echo '<input type="hidden" name="_idItemAlterar" value="' . $row["idItem"] . '">';
+            echo '<button type="submit" class="btn-info" name="_alterarItem">Confirmar</button>' . '  ' . 
+            '<button type="submit" class="btn-danger" value="' . $row["idItem"] . ' " name="_removerItemSimples">Remover</button>';
+            echo '</td></form>';
+        }
+        //normal
+        else{
+            
+            echo '<td>' . $row["descricao"] . '</td>';
+            echo '<td align="left">' . $row["quantidade"] . '</td>';            
+            if($row['status'] == '1'){         
+                echo '<td><form method="POST" action="/item/controleItem.php">';       
+                echo '<input type="hidden" value="' . $row['idItem'] . '" name="_checkItemId">';
+                echo '<input type="hidden" value="' . $row['status'] . '" name="_checkItemStatus">';
+                echo '<input type="submit" value="Devolver" name="_checkItem">';
+                //echo '<input type="image" src="/CSS/img/selecaoS3.jpg" value="homer2" name="_checkItem">';
+                echo '</form></td>';
+                //echo '<input type="hidden" name="_statusItemAlterar" value="' . $row['status'] . '">';
+            }
+            else{
+                echo '<td><form method="POST" action="/item/controleItem.php">';
+                echo '<input type="hidden" value="' . $row['idItem'] . '" name="_checkItemId">';
+                echo '<input type="hidden" value="' . $row['status'] . '" name="_checkItemStatus">';
+                echo '<input type="submit" value="Pegar" name="_checkItem">';
+                //echo '<input type="image" src="/CSS/img/selecaoN3.jpg" name="_checkItem">';
+                //echo '<input type="hidden" name="_statusItemAlterar" value="' . $row['status'] . '">';
+                echo '</form></td>';
+            }
+            
+            //echo '<td> '. '<input type="checkbox">' . ' </td>';
+            echo '<td><form method="POST" action="home.php">';
+            echo '<button type="submit" class="btn-primary" value="'. $row["idItem"] . '" name="_editarItem">Alterar</button>' . '  ' . 
+            '<button type="submit" class="btn-danger" value="' . $row["idItem"] . ' " name="_removerItemSimples">Remover</button>';
+            echo '</form></td>';            
+        }
         echo '</tr>';
     }
 } else {
@@ -65,49 +114,48 @@ if (mysqli_num_rows($resultado) > 0){
 echo '</tbody>
     </table>';
 //Fecha as divs abertas no 'echo'
-
 echo '</div>';
 echo '</div>';
+echo '</html>';
+?>
 
-//fecha a conexão com o Banco de Dados
-
-
-//echo "entrou!"
-
-
-echo '<div class="container">
+<html>
+    <div class="container">
         <div class="row justify-content-center">
             <br>
-            <form method="POST" action="home.php">
-                <input class="col btn btn-lg btn-primary btn-block" type="submit" value="Incluir item" name="_adicionarItem">
+            <form method="POST" action="/item/controleItem.php">
+                <input type="hidden" name="_idItemAlterar" value="<?php echo $idItemAlterar; ?>">
+                <div class="form-group">
+                    <label>Nome item:</label>
+                    <input type="text" name="_nomeItem" class="form-control" value="<?php echo $nomeItemAlterar; ?>">
+                </div>
+                <div class="form-group">
+                    <label>Quantidade item:</label>
+                    <input type="text" name="_quantidadeItem" class="form-control" value="<?php echo $quantidadeItemAlterar; ?>">
+                </div>
+                <div class="form-group">
+                    <?php
+                        if($auxAlterarItem == true):
+                    ?>
+                    <!--<input class="col btn btn-lg btn-info btn-block" type="submit" value="Alterar item" name="_alterarItem">-->
+                    <button type="submit" class="col btn btn-lg btn-info btn-block" name="_alterarItem">Alterar item</button>
+                    <?php
+                        else:
+                    ?>                    
+                    <input class="col btn btn-lg btn-primary btn-block" type="submit" value="Incluir item" name="_adicionarItem">
+                    <?php 
+                        endif; 
+                    ?>
 
-                <input class="col btn btn-lg btn-primary btn-block" type="submit" value="Remover vários itens" name="_removerItem">
+                    <input class="col btn btn-lg btn-primary btn-block" type="submit" value="Remover vários itens" name="_removerItem">
+                </div>
             </form>           
         </div>
     </div>  
     <br><h5><a href="/login/logout.php">Sair</a></h5>  
-    </html>';
+</html>
 
-switch(true){
-
-    case isset($_POST['_removerItemSimples']):
-        $i = $_POST['_removerItemSimples'];
-        removerItemSimples($i, $conexao);
-        header('Location: home.php');
-        break;
-
-    case isset($_POST['_adicionarItem']):
-        //fecha a conexão com o Banco de Dados
-        mysqli_close($conexao);
-        header('Location: /item/adicionarItem.php');
-        break;
-    
-    case isset($_POST['_removerItem']):
-        //fecha a conexão com o Banco de Dados
-        mysqli_close($conexao);
-        header('Location: /item/removerItem.php');
-        break;
-}
+<?php
 
 echo "<br>Usuário logado: " . $_SESSION['usuario'];
 
